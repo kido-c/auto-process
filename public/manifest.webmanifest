@@ -1,0 +1,12 @@
+{
+  "name": "운동 기록",
+  "short_name": "운동기록",
+  "description": "운동 세트 기록 후 Obsidian으로 내보내기",
+  "theme_color": "#f5f5f5",
+  "background_color": "#f5f5f5",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
