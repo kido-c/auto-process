@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-import { seedExercisesIfEmpty } from "@/db";
+import { seedExercisesIfEmpty, migrateExercises } from "@/db";
 import { HomePage } from "@/pages/HomePage";
 import { ExerciseSelectPage } from "@/pages/ExerciseSelectPage";
 import { SessionPage } from "@/pages/SessionPage";
@@ -24,7 +24,7 @@ function NotFoundPage() {
 
 export function App() {
   useEffect(() => {
-    seedExercisesIfEmpty();
+    seedExercisesIfEmpty().then(() => migrateExercises());
   }, []);
 
   return (

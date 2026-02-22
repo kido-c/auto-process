@@ -6,6 +6,8 @@ export interface Exercise {
   id: string;
   name: string;
   type: ExerciseType;
+  category?: string;
+  subcategory?: string;
   createdAt: number;
   iconColor?: string;
 }
@@ -41,6 +43,10 @@ class WorkoutDB extends Dexie {
     super("WorkoutLogDB");
     this.version(1).stores({
       exercises: "id, createdAt",
+      workoutDays: "id, date",
+    });
+    this.version(2).stores({
+      exercises: "id, createdAt, category",
       workoutDays: "id, date",
     });
   }

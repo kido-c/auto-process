@@ -143,3 +143,7 @@ Mac에서 로컬 서버를 켜 두면, PWA에서 **Obsidian에 자동 기록** �
 5. 이제 배포된 앱에서 **Obsidian에 자동 기록**을 누르면 HTTPS로 요청이 가서 정상 동작합니다.
 
 Tailscale Serve를 끄려면 해당 터미널에서 `Ctrl+C` 하면 됩니다. 자동 기록을 쓸 때마다 Mac에서 `tailscale serve 31415`를 켜 두면 됩니다.
+
+**전송 중이 오래 걸리다 Load failed가 나올 때**  
+- Mac에서 **Obsidian 서버를 실행한 터미널**을 보세요. 자동 기록을 누를 때 `OPTIONS /workout`과 `POST /workout` 로그가 찍히면 요청은 서버까지 도달한 것입니다. (20초 안에 응답이 안 가면 앱에서 "요청 시간 초과"로 바뀝니다.)  
+- 로그가 전혀 안 보이면 iPhone에서 Mac으로 요청이 도달하지 않은 것입니다. iPhone에서 Tailscale 앱이 켜져 있는지, 같은 Tailscale 계정인지, `tailscale serve 31415`가 Mac에서 실행 중인지 확인하세요.

@@ -1,11 +1,21 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/Card";
 import { ExerciseGrid } from "@/domains/exercise/components/ExerciseGrid";
 import { useExercises } from "@/domains/exercise/hooks/useExercises";
 import { addSessionToToday } from "@/domains/workout/hooks/useTodayWorkout";
+import { CATEGORIES } from "@/db";
 import { db } from "@/db";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  가슴: "가슴",
+  등: "등",
+  어깨: "어깨",
+  하체: "하체",
+  팔: "팔",
+  코어: "코어",
+};
 
 export function ExerciseSelectPage() {
   const navigate = useNavigate();
@@ -13,6 +23,17 @@ export function ExerciseSelectPage() {
   const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
   const [customName, setCustomName] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0]);
+
+  const filteredExercises = useMemo(
+    () => exercises.filter((e) => e.category === activeCategory),
+    [exercises, activeCategory]
+  );
+
+  const uncategorized = useMemo(
+    () => exercises.filter((e) => !e.category),
+    [exercises]
+  );
 
   const handleStartWithExercise = async (exerciseId: string) => {
     const sessionId = await addSessionToToday(exerciseId);
@@ -43,7 +64,7 @@ export function ExerciseSelectPage() {
   };
 
   return (
-    <Layout title="운동 기록" showBack={false}>
+    <Layout title="운동 선택" showBack={false}>
       <div className="mb-2 flex items-center gap-2">
         <span className="rounded-full bg-blue-100 p-2 text-blue-600">🏋️</span>
         <div>
@@ -53,12 +74,42 @@ export function ExerciseSelectPage() {
       </div>
 
       <Card className="mb-6">
-        <h3 className="mb-3 text-sm font-medium text-muted">운동 종류 선택</h3>
+        <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => {
+                setActiveCategory(cat);
+                setSelected(null);
+              }}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                activeCategory === cat
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-muted hover:bg-gray-200"
+              }`}
+            >
+              {CATEGORY_LABELS[cat] ?? cat}
+            </button>
+          ))}
+        </div>
+
         <ExerciseGrid
-          exercises={exercises}
+          exercises={filteredExercises}
           selectedId={selected?.id ?? null}
           onSelect={(ex) => handleSelectGridExercise(ex)}
         />
+
+        {uncategorized.length > 0 && (
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">기타</p>
+            <ExerciseGrid
+              exercises={uncategorized}
+              selectedId={selected?.id ?? null}
+              onSelect={(ex) => handleSelectGridExercise(ex)}
+            />
+          </div>
+        )}
 
         {selected && (
           <div className="mt-4 flex justify-center">
@@ -67,7 +118,7 @@ export function ExerciseSelectPage() {
               onClick={() => handleStartWithExercise(selected.id)}
               className="rounded-xl bg-primary px-6 py-2.5 font-medium text-white hover:opacity-90"
             >
-              시작
+              {selected.name} 시작
             </button>
           </div>
         )}

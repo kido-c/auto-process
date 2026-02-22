@@ -91,13 +91,14 @@ function getPathname(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  const pathname = getPathname(req);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${pathname}`);
+
   if (req.method === "OPTIONS") {
     res.writeHead(204, { ...CORS_HEADERS, "Content-Length": "0" });
     res.end();
     return;
   }
-
-  const pathname = getPathname(req);
 
   // 연결 확인용: GET / 또는 GET /workout → 200 + 메시지 (인증 불필요)
   if (req.method === "GET" && (pathname === "/" || pathname === "/workout")) {

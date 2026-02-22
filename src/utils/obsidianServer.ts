@@ -41,7 +41,12 @@ export async function sendWorkoutToObsidianServer(
   }
   const url = `${base}/workout`;
 
+  const REQUEST_TIMEOUT_MS = 20000;
+
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -49,7 +54,10 @@ export async function sendWorkoutToObsidianServer(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ date, content: markdown }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const data = await res.json().catch(() => ({}));
 
@@ -62,7 +70,12 @@ export async function sendWorkoutToObsidianServer(
     }
     return { ok: true };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "네트워크 오류";
+    const isAbort = e instanceof Error && e.name === "AbortError";
+    const msg = isAbort
+      ? "요청 시간이 초과되었습니다. Tailscale이 연결되어 있는지, Mac에서 서버와 tailscale serve가 켜져 있는지 확인하세요."
+      : e instanceof Error
+        ? e.message
+        : "네트워크 오류";
     return { ok: false, error: msg };
   }
 }
