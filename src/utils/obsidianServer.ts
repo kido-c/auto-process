@@ -66,3 +66,27 @@ export async function sendWorkoutToObsidianServer(
     return { ok: false, error: msg };
   }
 }
+
+/** 서버 연결 확인용 (GET). 인증 없이 200이면 서버 도달 가능. */
+export async function checkObsidianServerReachable(): Promise<{ ok: boolean; error?: string }> {
+  const { serverUrl } = getObsidianServerConfig();
+  if (!serverUrl?.trim()) {
+    return { ok: false, error: "서버 URL이 비어 있습니다." };
+  }
+  let base = serverUrl.trim().replace(/\/$/, "");
+  if (!/^https?:\/\//i.test(base)) {
+    base = "http://" + base;
+  }
+  const url = `${base}/`;
+  try {
+    const res = await fetch(url, { method: "GET" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data?.ok === true) {
+      return { ok: true };
+    }
+    return { ok: false, error: data?.error ?? res.statusText ?? `HTTP ${res.status}` };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "연결 실패";
+    return { ok: false, error: msg };
+  }
+}

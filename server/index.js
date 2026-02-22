@@ -84,6 +84,12 @@ function sectionAlreadyHasWorkout(sectionContent, exerciseBlock) {
   return sectionContent.includes(firstHeading);
 }
 
+function getPathname(req) {
+  const u = req.url ?? "";
+  const q = u.indexOf("?");
+  return q >= 0 ? u.slice(0, q) : u;
+}
+
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204, { ...CORS_HEADERS, "Content-Length": "0" });
@@ -91,7 +97,15 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method !== "POST" || req.url !== "/workout") {
+  const pathname = getPathname(req);
+
+  // 연결 확인용: GET / 또는 GET /workout → 200 + 메시지 (인증 불필요)
+  if (req.method === "GET" && (pathname === "/" || pathname === "/workout")) {
+    send(res, 200, { ok: true, message: "Obsidian workout server is running" });
+    return;
+  }
+
+  if (req.method !== "POST" || pathname !== "/workout") {
     send(res, 404, { ok: false, error: "Not Found" });
     return;
   }

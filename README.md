@@ -97,8 +97,8 @@ Mac에서 로컬 서버를 켜 두면, PWA에서 **Obsidian에 자동 기록** �
 2. **Mac의 Tailscale IP 확인**
    - Mac에서 Tailscale 앱을 켜면 **Tailscale IP**(예: `100.101.102.103`)가 보입니다. (192.168.x.x가 아님)
 3. **PWA 설정**
-   - **서버 URL**을 `http://Mac의Tailscale_IP:31415` 로 넣고 저장합니다.  
-     예: `http://100.101.102.103:31415`
+   - **같은 Wi‑Fi에서만** 앱을 쓰고, 앱 주소가 `http://...`(로컬)인 경우: **서버 URL**을 `http://Mac의Tailscale_IP:31415` 로 넣으면 됩니다.  
+   - **배포된 앱**(Vercel 등, `https://...`)에서 자동 기록을 쓰는 경우: 브라우저가 HTTP 요청을 막으므로, 아래 "HTTPS로 접속하기 (Tailscale Serve)"대로 **HTTPS** 서버 URL을 설정해야 합니다.
 4. **사용**
    - Mac에서 `npm run server:daily`(또는 `server/start.sh`)를 실행해 두고, iPhone은 **어디서든**(LTE, 다른 Wi‑Fi) PWA에서 **Obsidian에 자동 기록**을 누르면, Tailscale 경유로 Mac에 전달되어 데일리 노트에 기록됩니다.
 
@@ -124,4 +124,22 @@ Mac에서 로컬 서버를 켜 두면, PWA에서 **Obsidian에 자동 기록** �
 3. **Build Command** / **Output Directory**는 저장소 루트의 `vercel.json`에 이미 설정되어 있으므로 그대로 **Deploy** 합니다.  
 4. 배포가 끝나면 **배포된 URL**(예: `https://workout-log-xxx.vercel.app`)이 나옵니다.  
 5. iPhone Safari에서 이 URL을 열고 **공유 → 홈 화면에 추가**로 PWA로 설치합니다.  
-6. 앱 내 **설정**에서 **서버 URL**을 `http://Mac의Tailscale_IP:31415` 로 저장하면, 자동 기록 시에만 Mac으로 요청이 갑니다.
+6. 앱 내 **설정**에서 **서버 URL**을 아래 "HTTPS로 접속하기"처럼 **HTTPS 주소**로 저장해야 합니다. (HTTP 주소를 쓰면 브라우저가 요청을 막아 "Load failed"가 납니다.)
+
+**배포된 앱(HTTPS)에서 "Load failed"가 날 때**
+
+- 배포된 앱은 **HTTPS**로 열립니다. HTTPS 페이지에서는 **HTTP** 주소로 요청할 수 없어서(혼합 콘텐츠 차단) `http://TailscaleIP:31415` 로 설정하면 요청이 막히고 "Load failed"가 납니다.
+- **해결**: Mac에서 **Tailscale Serve**로 31415 포트를 **HTTPS** URL로 노출한 뒤, 그 주소를 서버 URL로 넣으면 됩니다.
+
+**HTTPS로 접속하기 (Tailscale Serve)**
+
+1. Mac에서 Obsidian 서버를 켜 둡니다: `npm run server:daily` (또는 `server/start.sh`).
+2. **같은 Mac**에서 터미널을 열고 다음을 실행합니다.  
+   `tailscale serve 31415`  
+   (Tailscale CLI가 없다면 [설치](https://tailscale.com/download) 후, 첫 실행 시 HTTPS 사용 허용 안내에 따라 설정합니다.)
+3. 터미널에 나온 **HTTPS 주소**를 복사합니다. 예: `https://mymac.내테일넷이름.ts.net`
+4. PWA **설정**에서 **서버 URL**을 그 주소로 넣고 저장합니다.  
+   예: `https://mymac.내테일넷이름.ts.net` (포트 없이 사용)
+5. 이제 배포된 앱에서 **Obsidian에 자동 기록**을 누르면 HTTPS로 요청이 가서 정상 동작합니다.
+
+Tailscale Serve를 끄려면 해당 터미널에서 `Ctrl+C` 하면 됩니다. 자동 기록을 쓸 때마다 Mac에서 `tailscale serve 31415`를 켜 두면 됩니다.

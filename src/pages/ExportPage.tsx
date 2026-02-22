@@ -63,11 +63,21 @@ export function ExportPage() {
       }
     } else {
       setSendStatus("error");
+      const raw = result.error ?? "";
       const msg =
         result.error === "Not Found"
-          ? "서버를 찾을 수 없습니다. 설정에서 서버 URL이 http://Mac의IP:31415 인지 확인하세요. (앱 주소 5173이 아니라 Obsidian 서버 31415입니다.)"
-          : result.error;
+          ? "서버를 찾을 수 없습니다. 설정에서 서버 URL이 올바른지 확인하세요. (Obsidian 서버 포트 31415)"
+          : raw;
       setSendError(msg);
+      // 배포된 앱(HTTPS)에서 흔한 실패 시 안내
+      if (
+        typeof raw === "string" &&
+        (raw.includes("Load failed") || raw.includes("Failed to fetch") || raw.includes("fetch") || raw === "네트워크 오류")
+      ) {
+        setSendError(
+          `${msg} — 배포된 앱에서는 서버 URL이 https:// 로 시작해야 합니다. 설정에서 Tailscale Serve(https://...ts.net) 주소로 넣고 「연결 테스트」로 확인하세요.`
+        );
+      }
     }
   }, [date, markdown]);
 

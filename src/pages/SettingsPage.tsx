@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/Card";
-import { getObsidianServerConfig, setObsidianServerConfig } from "@/utils/obsidianServer";
+import { getObsidianServerConfig, setObsidianServerConfig, checkObsidianServerReachable } from "@/utils/obsidianServer";
 
 function generateToken(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -14,6 +14,8 @@ export function SettingsPage() {
   const [serverUrl, setServerUrl] = useState("");
   const [token, setToken] = useState("");
   const [saved, setSaved] = useState(false);
+  const [checkStatus, setCheckStatus] = useState<"idle" | "checking" | "ok" | "fail">("idle");
+  const [checkError, setCheckError] = useState("");
 
   useEffect(() => {
     const c = getObsidianServerConfig();
@@ -35,6 +37,19 @@ export function SettingsPage() {
     } catch {
       /* ignore */
     }
+  };
+
+  const handleCheckConnection = async () => {
+    setCheckStatus("checking");
+    setCheckError("");
+    const result = await checkObsidianServerReachable();
+    if (result.ok) {
+      setCheckStatus("ok");
+    } else {
+      setCheckStatus("fail");
+      setCheckError(result.error ?? "연결 실패");
+    }
+    setTimeout(() => setCheckStatus("idle"), 5000);
   };
 
   return (
@@ -81,13 +96,28 @@ export function SettingsPage() {
               <strong>토큰이란?</strong> 본인이 정하는 비밀문자입니다. Mac에서 서버를 실행할 때 <code className="rounded bg-gray-100 px-1">OBSIDIAN_TOKEN=여기에적을값</code> 으로 넣고, 이 설정의 토큰 칸에도 <strong>같은 값</strong>을 입력하면 됩니다. 「토큰 생성」을 누르면 랜덤 값이 만들어지고 복사되므로, 그 값을 서버 실행 시와 여기 둘 다 넣으면 됩니다.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white hover:opacity-90"
-          >
-            {saved ? "저장됨" : "저장"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-white hover:opacity-90"
+            >
+              {saved ? "저장됨" : "저장"}
+            </button>
+            <button
+              type="button"
+              onClick={handleCheckConnection}
+              disabled={!serverUrl.trim() || checkStatus === "checking"}
+              className="shrink-0 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-primary hover:bg-gray-50 disabled:opacity-50"
+            >
+              {checkStatus === "checking" ? "확인 중..." : checkStatus === "ok" ? "연결됨" : "연결 테스트"}
+            </button>
+          </div>
+          {checkStatus === "fail" && (
+            <p className="mt-2 text-sm text-red-600">
+              연결 실패: {checkError}. 배포된 앱(https)에서는 서버 URL이 <strong>https://</strong> 로 시작해야 합니다 (Tailscale Serve 사용).
+            </p>
+          )}
         </div>
       </Card>
       <Card className="mb-4">
@@ -108,13 +138,16 @@ npm run server`}
         <p className="mb-2 text-xs text-muted">
           다른 Wi‑Fi나 LTE에서도 기록하려면 <strong>Tailscale</strong>을 쓰세요. (무료, 포트 포워딩 없음)
         </p>
+        <p className="mb-2 text-xs text-amber-700">
+          <strong>배포된 앱(Vercel 등)에서 쓰는 경우:</strong> 브라우저가 HTTP 요청을 막으므로, 서버 URL은 반드시 <strong>https://</strong> 로 시작해야 합니다. Mac에서 <code className="rounded bg-gray-100 px-1">tailscale serve 31415</code> 실행 후 나온 <strong>https://...ts.net</strong> 주소를 서버 URL에 넣으세요.
+        </p>
         <ol className="list-decimal list-inside space-y-1 text-xs text-muted">
           <li>tailscale.com 가입 후 Mac·iPhone에 Tailscale 앱 설치, 같은 계정 로그인</li>
-          <li>Mac Tailscale 앱에서 표시되는 <strong>Tailscale IP</strong>(100.x.x.x) 확인</li>
-          <li>위 서버 URL에 <code className="rounded bg-gray-100 px-1">http://100.x.x.x:31415</code> 형태로 입력 후 저장</li>
+          <li>Mac에서 서버 실행 후 <code className="rounded bg-gray-100 px-1">tailscale serve 31415</code> 실행 → 나온 <strong>https://...</strong> 주소를 서버 URL에 입력</li>
+          <li>위에서 「연결 테스트」로 도달 가능한지 확인</li>
         </ol>
         <p className="mt-2 text-xs text-muted">
-          서버 URL을 Tailscale IP(100.x.x.x)로 두면 같은 Wi‑Fi·외부 모두에서 사용 가능합니다. Mac에서 서버를 켜 두면 iPhone이 어디에 있든 자동 기록됩니다.
+          같은 Wi‑Fi에서만 쓰고 앱 주소가 http인 경우에는 <code className="rounded bg-gray-100 px-1">http://100.x.x.x:31415</code> 로도 됩니다.
         </p>
       </Card>
       <Card className="mb-4">
