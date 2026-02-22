@@ -19,7 +19,7 @@ export function ExportPage() {
   const exerciseMap = new Map(exercises.map((e) => [e.id, e]));
 
   const [day, setDay] = useState<import("@/db").WorkoutDay | null>(null);
-  const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "ok" | "error">("idle");
+  const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "ok" | "error" | "skipped">("idle");
   const [sendError, setSendError] = useState("");
 
   useLoadWorkoutDay(date, setDay);
